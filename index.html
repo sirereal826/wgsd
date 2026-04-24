@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>玩梗时代</title>
     <style>
+        /* ========== 自定义像素字体 ========== */
+        @font-face {
+            font-family: 'PixelFont';
+            src: url('fonts/ark-pixel-12px-monospaced-zh_cn.otf.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,22 +22,43 @@
         body {
             background: #111;
             color: white;
-            font-family: "Microsoft YaHei", sans-serif;
+            font-family: 'PixelFont', "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
             text-align: center;
             padding: 20px;
             position: relative;
             min-height: 100vh;
             transition: background-color 0.5s ease;
         }
+        /* 所有页面默认 display: none，有游戏元素的页面保持 block 方式，居中页面通过 flex 实现 */
         .page {
             display: none;
-            padding: 30px 0;
             position: relative;
             z-index: 2;
         }
         .active {
             display: block;
         }
+        /* 纯文字页面（无游戏交互元素）使用 flex 垂直居中 */
+        .center-page {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 20px;
+        }
+        .center-page.active {
+            display: flex;
+        }
+        /* 有游戏元素的页面保持原有 block 布局 */
+        .game-page {
+            display: none;
+            padding: 30px 0;
+        }
+        .game-page.active {
+            display: block;
+        }
+
         .btn {
             padding: 12px 24px;
             background: #ff3366;
@@ -94,7 +124,7 @@
             will-change: transform;
             opacity: 0.7;
             pointer-events: none;
-            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+            font-family: 'PixelFont', "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
             animation: moveBarrage linear forwards;
         }
         @keyframes moveBarrage {
@@ -108,7 +138,7 @@
             }
         }
 
-        /* 游戏1 变色跑道 */
+        /* 游戏1 变色跑道（有游戏元素，保持原样式） */
         .game-box {
             width: 90%;
             height: 140px;
@@ -257,7 +287,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 60vh;
+            width: 100%;
         }
         .muyu-title {
             font-size: 36px;
@@ -315,12 +345,7 @@
         /* 选择页面 */
         .choice-page {
             background: black;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
+            width: 100%;
         }
         .choice-text {
             font-size: 28px;
@@ -355,7 +380,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 60vh;
+            width: 100%;
         }
         .dodge-intro-text {
             font-size: 28px;
@@ -364,7 +389,7 @@
             line-height: 1.4;
         }
 
-        /* 躲避游戏样式 */
+        /* 躲避游戏样式（有游戏元素） */
         .dodge-canvas {
             background: #1a1a1a;
             border: 2px solid #ffcc00;
@@ -395,13 +420,13 @@
             cursor: pointer;
         }
 
-        /* 结局通用样式 */
+        /* 结局通用样式（纯文字，居中） */
         .ending-container {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 70vh;
+            width: 100%;
             text-align: center;
         }
         .big-title {
@@ -416,6 +441,23 @@
             max-width: 500px;
             margin: 20px auto;
             line-height: 1.6;
+        }
+
+        /* 结局三专属彩色背景 */
+        #ending3 {
+            background: linear-gradient(135deg, #ff3366, #ffcc00, #00ff99, #0099ff);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        #ending3 .small-text {
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 20px;
         }
 
         /* 游戏3 */
@@ -439,7 +481,14 @@
             margin-top: 10px;
         }
 
-        .page { position: relative; z-index: 2; }
+        /* 避免文字不必要断行 */
+        p, .tip, .status, .level-tip, .message-area, .small-text, .big-title, .choice-text, .dodge-intro-text, .muyu-sub, .red-tip, .knock-info, .timer, .content-desc, .judge-text {
+            word-break: keep-all;
+            white-space: normal;
+        }
+        .content-desc, .judge-text {
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -447,19 +496,19 @@
 <!-- 弹幕容器 -->
 <div id="barrageContainer" class="barrage-container" style="display: none;"></div>
 
-<!-- 开场页 -->
-<div class="page active" id="start">
+<!-- 开场页（纯文字，居中） -->
+<div class="center-page active" id="start">
     <h1 class="hero-title">玩梗时代</h1>
     <p class="sub">你真的擅长玩梗吗？</p>
     <div class="status">思考能力：<span id="mind">100</span>｜决策能力：<span id="decide">100</span></div>
     <button class="btn" onclick="startGame1()">开始玩梗</button>
 </div>
 
-<!-- 游戏1：同类相吸 -->
-<div class="page" id="game1">
+<!-- 游戏1：同类相吸（有游戏元素，保持原样） -->
+<div class="game-page" id="game1">
     <h2>游戏1：同类相吸</h2>
     <p class="level">当前关卡：<span id="lv">1</span>/4</p>
-    <p class="tip">你需要变成与群体相同的颜色，你需要加入他们<br>群体会越来越严格，你需要擦亮双眼</p>
+    <p class="tip">点击下方按钮，改变成为与右侧群体相同的颜色然后融入<br>群体会越来越严格，你需要擦亮双眼</p>
     <div class="status">思考能力：<span id="m1">100</span></div>
     <div class="game-box">
         <div class="player" id="man"></div>
@@ -469,8 +518,8 @@
     <div class="level-tip" id="levelTip"></div>
 </div>
 
-<!-- 游戏1通关页 -->
-<div class="page" id="game1-end">
+<!-- 游戏1通关页（纯文字，居中） -->
+<div class="center-page" id="game1-end">
     <h2>游戏一结束</h2>
     <p>你一路迎合，终于获得了群体的认可</p>
     <div class="status">最终思考能力：<span id="m-final">0</span></div>
@@ -478,8 +527,8 @@
     <button class="btn" onclick="goGame2()">继续玩梗</button>
 </div>
 
-<!-- 游戏2：求同排异 -->
-<div class="page" id="game2">
+<!-- 游戏2：求同排异（有游戏元素） -->
+<div class="game-page" id="game2">
     <h2>游戏2：求同排异</h2>
     <p class="tip">点击下方色盘选色，从左上角星号方块开始，相邻的整片同色区域会被染色<br>用最少步数把全场变成同一种颜色</p>
     <div class="status">思考能力：<span id="m2">100</span></div>
@@ -489,11 +538,11 @@
         <div id="palette" style="display: flex; gap: 8px; flex-wrap: nowrap;"></div>
     </div>
     <div class="paint-grid" id="grid"></div>
-    <div class="message-area" id="game2Message">🌟 你好像有了不一样的感触...</div>
+    <div class="message-area" id="game2Message">🌟 大家都在玩梗...</div>
 </div>
 
-<!-- 游戏2结局 -->
-<div class="page" id="game2-end">
+<!-- 游戏2结局（纯文字，居中） -->
+<div class="center-page" id="game2-end">
     <h2>游戏二结束</h2>
     <p>世界变成了一片单调的颜色</p>
     <div class="status">最终思考能力：<span id="m2-final">0</span></div>
@@ -501,8 +550,8 @@
     <button class="btn" onclick="goGame3()">继续玩梗</button>
 </div>
 
-<!-- 游戏3：求助？玩梗！ -->
-<div class="page" id="intro-page">
+<!-- 游戏3：求助？玩梗！（有游戏元素） -->
+<div class="game-page" id="intro-page">
     <h2>第三关</h2>
     <h3>求助还是玩梗</h3>
     <p class="tip">你将看到一群“网友”发布的帖子，他们有人是在求助，而有人是在玩梗<br>他们只有一半是真正的求助者，请你仔细辨认</p>
@@ -511,7 +560,7 @@
     <button class="btn" onclick="goGamePage()">开始辨别</button>
 </div>
 
-<div class="page" id="game-page">
+<div class="game-page" id="game-page">
     <h3>真假的求助者</h3>
     <div class="progress">
         真相值：<span id="score">0</span>/4
@@ -521,7 +570,7 @@
     <div id="insightButtonContainer" style="margin-top: 20px;"></div>
 </div>
 
-<div class="page" id="content-page">
+<div class="game-page" id="content-page">
     <div class="content-box">
         <div class="content-title" id="content-title"></div>
         <div class="content-desc" id="content-desc"></div>
@@ -530,8 +579,8 @@
     <button class="btn" onclick="backGamePage()">返回继续辨别</button>
 </div>
 
-<!-- 赛博木鱼页面 -->
-<div class="page" id="muyu-page">
+<!-- 赛博木鱼页面（纯文字+图片，居中） -->
+<div class="center-page" id="muyu-page">
     <div class="muyu-container">
         <div class="muyu-title">来敲赛博木鱼吧</div>
         <div class="muyu-sub">不管你是玩梗过度，还是讲了地狱笑话，只要敲一敲赛博木鱼，就能换回失去的功德，洗去那一点点微妙的负罪感</div>
@@ -543,19 +592,17 @@
     </div>
 </div>
 
-<!-- 选择页面 -->
-<div class="page" id="choice-page">
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;">
-        <div class="choice-text" id="clickToShow">你还想继续玩梗吗？<br><span style="font-size: 16px; color:#aaa;">(点击屏幕)</span></div>
-        <div id="choiceButtons" style="display: none;" class="choice-buttons">
-            <div class="choice-btn" id="continueBtn">继续，我能把握好玩梗的度</div>
-            <div class="choice-btn" id="pauseBtn">我想，我需要好好冷静一下</div>
-        </div>
+<!-- 选择页面（纯文字，居中） -->
+<div class="center-page" id="choice-page">
+    <div class="choice-text" id="clickToShow">你还想继续玩梗吗？<br><span style="font-size: 16px; color:#aaa;">(点击屏幕)</span></div>
+    <div id="choiceButtons" style="display: none;" class="choice-buttons">
+        <div class="choice-btn" id="continueBtn">继续，我能把握好玩梗的度</div>
+        <div class="choice-btn" id="pauseBtn">我想，我需要好好冷静一下</div>
     </div>
 </div>
 
-<!-- 结局一：理性尚存 -->
-<div class="page" id="ending1">
+<!-- 结局一：理性尚存（纯文字，居中） -->
+<div class="center-page" id="ending1">
     <div class="ending-container">
         <div class="big-title">结局一：理性尚存</div>
         <div class="small-text">在玩梗时代，你选择了激流勇退，虽然可能会丧失一些乐趣，但是至少你能保持住自己独立思考的能力</div>
@@ -563,8 +610,8 @@
     </div>
 </div>
 
-<!-- 结局二：梗海迷失 -->
-<div class="page" id="ending2">
+<!-- 结局二：梗海迷失（纯文字，居中） -->
+<div class="center-page" id="ending2">
     <div class="ending-container">
         <div class="big-title">结局二：梗海迷失</div>
         <div class="small-text">在玩梗时代，你成为了时代车轮底下的一粒尘埃，在烂梗的泥潭里面迷失</div>
@@ -572,8 +619,8 @@
     </div>
 </div>
 
-<!-- 结局四：虚妄安宁 -->
-<div class="page" id="ending4">
+<!-- 结局四：虚妄安宁（纯文字，居中） -->
+<div class="center-page" id="ending4">
     <div class="ending-container">
         <div class="big-title">结局四：虚妄安宁</div>
         <div class="small-text">在玩梗时代，你无法全身而退，虽然获得了暂时的休息，但你已经有过继续的意愿，就再无可能潇洒的转身离开</div>
@@ -581,8 +628,8 @@
     </div>
 </div>
 
-<!-- 结局三：我的时代 -->
-<div class="page" id="ending3">
+<!-- 结局三：我的时代（纯文字，居中，彩色背景） -->
+<div class="center-page" id="ending3">
     <div class="ending-container">
         <div class="big-title">结局三：我的时代</div>
         <div class="small-text">在玩梗时代，你既能跟随时代潮流，也能保持清醒理智。玩梗，而不是被梗玩，你才是这个时代的主宰。<br>希望你走出这个虚拟的玩梗时代游戏，回到你真实的世界里，也能认真玩梗，合理玩梗，好好玩梗，感谢游玩！</div>
@@ -590,16 +637,16 @@
     </div>
 </div>
 
-<!-- 躲避游戏引导页 -->
-<div class="page" id="dodge-intro">
+<!-- 躲避游戏引导页（纯文字，居中） -->
+<div class="center-page" id="dodge-intro">
     <div class="dodge-intro">
         <div class="dodge-intro-text">你选择了接受玩梗时代的最终挑战，接住白色的梗能量，躲避紫色的烂梗，加油吧，你只有一次机会</div>
         <button class="btn" id="startDodgeBtn">开始挑战</button>
     </div>
 </div>
 
-<!-- 躲避游戏主页面 -->
-<div class="page" id="dodge-game">
+<!-- 躲避游戏主页面（有游戏元素） -->
+<div class="game-page" id="dodge-game">
     <h2>玩梗时代最终篇</h2>
     <div class="tip">白色是正常的网络热梗，紫色是讨厌的烂梗<br>请你躲避烂梗，收集正确的梗</div>
     <div class="dodge-stats">
@@ -616,11 +663,9 @@
 
 <script>
 // ====================== 音效与背景音乐定义 ======================
-// 原有音效
 var correctSound = new Audio('correct.mp3');
 var wrongSound = new Audio('wrong.mp3');
 var dyeSound = new Audio('dye_sound.mp3');
-// 游戏背景音乐
 var bgmGame1 = new Audio('bgm_game1.mp3');
 bgmGame1.loop = true;
 bgmGame1.volume = 0.5;
@@ -630,11 +675,9 @@ bgmGame2.volume = 0.5;
 var bgmGame3 = new Audio('bgm_game3.mp3');
 bgmGame3.loop = true;
 bgmGame3.volume = 0.5;
-// 开场背景音乐
 var startBgm = new Audio('start_bgm.mp3');
 startBgm.loop = true;
 startBgm.volume = 0.5;
-// 新增音效
 var muyuBgm = new Audio('muyu_bgm.mp3');
 muyuBgm.loop = true;
 muyuBgm.volume = 0.5;
@@ -642,9 +685,7 @@ var muyuKnock = new Audio('muyu_knock.mp3');
 var dodgeBgm = new Audio('dodge_bgm.mp3');
 dodgeBgm.loop = true;
 dodgeBgm.volume = 0.5;
-var collideSound = new Audio('collide.mp3'); // 碰撞音效
-
-// 四个结局独立背景音乐
+var collideSound = new Audio('collide.mp3');
 var ending1Bgm = new Audio('ending1_bgm.mp3');
 var ending2Bgm = new Audio('ending2_bgm.mp3');
 var ending3Bgm = new Audio('ending3_bgm.mp3');
@@ -686,12 +727,11 @@ function createBarrage() { if (!barrageActive) return; const container = documen
 function startBarrage() { if (barrageInterval) clearInterval(barrageInterval); const container = document.getElementById('barrageContainer'); if (container) { container.style.display = 'block'; barrageActive = true; for (let i = 0; i < 15; i++) setTimeout(() => createBarrage(), i * 80); barrageInterval = setInterval(() => { if (barrageActive) createBarrage(); }, 280); } }
 function stopBarrage() { barrageActive = false; if (barrageInterval) { clearInterval(barrageInterval); barrageInterval = null; } const container = document.getElementById('barrageContainer'); if (container) { container.innerHTML = ''; container.style.display = 'none'; } }
 
-// 优化后的开场页（处理自动播放策略）
+// 优化后的开场页（自动播放策略）
 function showStartPage() {
     hideAllPages();
     document.getElementById('start').classList.add('active');
     startBarrage();
-
     if (startBgm) {
         startBgm.play().catch(() => {
             const playOnFirstClick = () => {
@@ -710,7 +750,7 @@ let level = 1, maxLevel = 4, game1Moving = false;
 const config = [{ colorNum: 1, lose: 10 }, { colorNum: 4, lose: 15 }, { colorNum: 8, lose: 20 }, { colorNum: 16, lose: 30 }];
 const levelTexts = {
     1: "要开始玩梗其实很简单，看着大家说什么就跟着发一个，“躺平”就是躺平，“硬核”就是硬核，通俗易懂",
-    2: "可是网上的梗那么多，玩多了就会遇到难度升级，“大聪明”其实是反讽人不太聪明",
+    2: "可是网上的梗那么多，可是网上的梗那么多，玩多了你就会发现它们会越演变越复杂，完全偏离传统语义，“大聪明”其实是反讽人不太聪明",
     3: "有的梗甚至要经历多次的转化，“耄耋”是猫爹的谐音，而它真正的用法是表达对爱猫人士的鄙夷",
     4: "PUA你是压迫你 CPU你是洗脑你 KTV你是背后卖你 UFO你是拿你当外星人 PPT你是画饼  也不知道这些梗和这个游戏 谁更让你眼花缭乱"
 };
@@ -722,19 +762,19 @@ function generateColors(num, level) { let colors = [], hueRange = [360,240,120,6
 function makeColors(colors, correct) { let box = document.getElementById("colorBox"); box.innerHTML = ""; colors.forEach(c => { let btn = document.createElement("div"); btn.className = "color-btn"; btn.style.background = c; btn.onclick = () => checkColor(c, correct); box.appendChild(btn); }); }
 function checkColor(select, correct) { if (game1Moving) return; if (select !== correct) { playSound(wrongSound); alert("选错了！无法前进"); return; } playSound(correctSound); game1Moving = true; document.getElementById("colorBox").style.pointerEvents = 'none'; let lose = config[level-1].lose; mind -= lose; document.getElementById("man").style.background = correct; document.getElementById("man").style.left = "80%"; setTimeout(() => { document.getElementById("colorBox").style.pointerEvents = 'auto'; game1Moving = false; if (level < maxLevel) { level++; refreshLevel(); } else { bgmGame1.pause(); hideAllPages(); document.getElementById("game1-end").classList.add("active"); document.getElementById("m-final").innerText = mind; } }, 600); }
 
-// ====================== 游戏2完整逻辑 ======================
+// ====================== 游戏2完整逻辑（最终背景变为灰色） ======================
 const ROWS = 8, COLS = 8;
 let grid = [], step = 0;
 let game2Mind = 100;
 const gameColors = ["#ff3366","#0099ff","#ffcc00","#00ff99","#9900ff"];
 let gameFinished = false;
 const messageSequence = [
-    "一个人玩梗很没意思，你总要拉其他人一起玩玩",
-    "你乐此不疲地向身边的人分享你新学的梗，你觉得很开心",
-    "可是你发现大家总是在说一样的话，你从不同的人那里居然能得到相同的回应",
-    "比如玩游戏，曾经有人说你操作好牛，有人说哇你好厉害，也有人说通关好快",
-    "现在你只能看到满屏的666",
-    "你真的会喜欢这样枯燥而单调的语言世界吗？"
+    "因为一个人玩梗很没意思，梗要在群体里流行才会变得有趣",
+    "你乐此不疲地向身边的人分享你新学的梗，你们都很开心",
+    "可是你会不会发现大家总是在说一样的话，你从不同的人那里居然能得到相同的回应",
+    "人们不再追求个性化的表达，而是想要用自己学到的梗作为模板，去理解一切事物",
+    "就如同现在的你，不断变化颜色，又不断让其他人加入",
+    "你真的会喜欢这样枯燥而单调的颜色（语言）世界吗？"
 ];
 function updateGame2Message(stepCount) { const msgDiv = document.getElementById("game2Message"); if (!msgDiv) return; if (stepCount <= 0) { msgDiv.innerHTML = "🌟 你好像有了不一样的感触..."; return; } let idx = stepCount - 1; if (idx >= messageSequence.length) idx = messageSequence.length - 1; msgDiv.innerHTML = messageSequence[idx]; }
 function decreaseMind() { if (game2Mind > 10) { game2Mind -= 2; if (game2Mind < 10) game2Mind = 10; } document.getElementById("m2").innerText = game2Mind; }
@@ -743,8 +783,7 @@ function finishGame2() {
     if(gameFinished) return; 
     gameFinished=true; 
     bgmGame2.pause(); 
-    let finalColor = grid[0][0];
-    document.body.style.backgroundColor = finalColor;
+    document.body.style.backgroundColor = "#444444";
     document.getElementById("m2-final").innerText = game2Mind; 
     hideAllPages(); 
     document.getElementById("game2-end").classList.add("active"); 
@@ -775,11 +814,11 @@ function initPostData(){
     postData = [
         {id:1,title:"帮忙偷渡的活动还在吗？",content:"一不小心零食买多了，怎么偷偷带进学校啊？",judge:'真相值+1<br>“偷渡”梗：在互联网上不是偷偷离开国境的违法行为，而是泛指偷偷携带一些没有实质危害性的物品',addScore:1,checked:false},
         {id:2,title:"家里白色地板老是脏怎么办？",content:"上班好累啊，根本不想做家务，自从买了xx扫地机，我就不用每天累死累活的扫地了。<br><br>复制下方关键词dheuwjnx打开xxx 8.8折优惠下单附赠三年保修",judge:'对你来说比起玩梗党更讨厌的标题党乱入了，但它们或许一样讨厌，都在入侵本该正常交流的场合。',addScore:0,checked:false},
-        {id:3,title:"是不是去掉自己的名字期末再加上去就不怕被点名了？😊",content:"如题，早八总是起不来但是老师爱点名，不想被扣平时分，这样操作是不是天衣无缝。<br><br>大家补药骂我了，搞抽象的，这是参考文献［图片］",judge:'“参考文献”梗：对互联网上看到的奇葩内容进行部分改编后再次发布，可以获得大量浏览，仅需要说明参考文献就能获得免责权',addScore:0,checked:false},
-        {id:4,title:"买了发现这套衣服好丑怎么调理？",content:"btd致歉 好喜欢这套衣服的版型但是不知道什么颜色好，大家进来的话帮我选选吧真是非常感谢。",judge:'真相值+1<br>用标题党的形式来让自己的求助更有流量已经成为一种网络热梗，你总是能发现这样故意反着写的标题，它有利有弊，但你姑且算是发现了一个真实的求助者。',addScore:1,checked:false},
+        {id:3,title:"是不是去掉自己的名字期末再加上去就不怕被点名了？",content:"如题，早八总是起不来但是老师爱点名，不想被扣平时分，这样操作是不是天衣无缝。<br><br>大家补药骂我了，搞抽象的，这是参考文献［图片］",judge:'“参考文献”梗：对互联网上看到的奇葩内容进行部分改编后再次发布，可以获得大量浏览，仅需要说明参考文献就能获得免责权',addScore:0,checked:false},
+        {id:4,title:"买了发现这套衣服好丑怎么办？",content:"btd致歉 好喜欢这套衣服的版型但是不知道什么颜色好，大家进来的话帮我选选吧真是非常感谢。",judge:'真相值+1<br>用标题党的形式来让自己的求助更有流量已经成为一种网络热梗，你总是能发现这样故意反着写的标题，它有利有弊，但你姑且算是发现了一个真实的求助者。',addScore:1,checked:false},
         {id:5,title:"考场怎么没有人啊？",content:"点进来的人一定要注意啊，xx考试的时间是14号，千万不要记错了时间。",judge:'这是一位好心人，故意玩梗来吸引大家点开，通知大家正确的考试时间，遗憾的是他不能算作求助者，你需要继续寻找。',addScore:0,checked:false},
-        {id:6,title:"好消息我中奖了！奖金怎么花啊？",content:"坏消息这是在做梦 要是我一直在梦里就好了",judge:'“好信息，坏消息”梗：在现在的互联网语境中，好信息和坏消息不是传统的并列关系，坏消息往往是对好消息的全屏否定，多用于自嘲搞笑。<br><br>他没有真的在求助，但你也许..松了一口气',addScore:0,checked:false},
-        {id:7,title:"总感觉家里有人怎么办？😭",content:"旅游回来就总是在家里听到奇怪的声音，我一个人住，总觉得心慌。<br><br>16号更新 来人理理我吧，我真的不是在写恐怖小说的<br>18号更新 [图片]我真的一个人在家 虽然之前是经常复制别人的参考文献，但是这次我是真的震撼首发",judge:'真相值+1<br>这是一位求助者，但是他似乎因为过往的发布内容吃了些苦头，正儿八经的提问反而得不到应有的关注',addScore:1,checked:false},
+        {id:6,title:"好消息我中奖了奖金怎么花",content:"坏消息这是在做梦 要是我一直在梦里就好了",judge:'“好信息，坏消息”梗：在现在的互联网语境中，好信息和坏消息不是传统的并列关系，坏消息往往是对好消息的全屏否定，多用于自嘲搞笑。<br><br>他没有真的在求助，但你也许..松了一口气',addScore:0,checked:false},
+        {id:7,title:"总感觉家里有人怎么办",content:"旅游回来就总是在家里听到奇怪的声音，我一个人住，总觉得心慌。<br><br>16号更新 来人理理我吧，我真的不是在写恐怖小说的<br>18号更新 [图片]我真的一个人在家 虽然之前是经常复制别人的参考文献，但是这次我是真的震撼首发",judge:'真相值+1<br>这是一位求助者，但是他似乎因为过往的发布内容吃了些苦头，正儿八经的提问反而得不到应有的关注',addScore:1,checked:false},
         {id:8,title:"想退学当特种兵，来人劝劝我",content:"在外地上大学，听说附近有很多旅游胜地，但是这个学期好忙，所以有没有那种一个周末就能逛好几个景点的特种兵旅游攻略<br><br>当然退学是不可能退的 好不容易考上的",judge:'真相值+1<br>“特种兵”梗：指在很短的时间内往返多个景点，不进行深入游览，只是打卡拍照，出行强度很大，所以叫特种兵。',addScore:1,checked:false}
     ];
 }
@@ -888,8 +927,11 @@ function choiceContinue() {
 }
 function choicePause() { playBGM(ending1Bgm); hideAllPages(); document.getElementById("ending1").classList.add("active"); }
 
-// 页面统一隐藏函数
-function hideAllPages() { document.querySelectorAll(".page").forEach(p => p.classList.remove("active")); }
+// 页面统一隐藏函数（兼容两种页面类型）
+function hideAllPages() {
+    // 隐藏所有 center-page 和 game-page
+    document.querySelectorAll(".center-page, .game-page").forEach(p => p.classList.remove("active"));
+}
 
 // 绑定事件
 document.addEventListener("DOMContentLoaded", () => {
